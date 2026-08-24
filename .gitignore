@@ -1,1 +1,6 @@
 finsight_workflow.html
+data/raw/*
+.DS_Store
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
