@@ -37,4 +37,7 @@ def check_amounts(df, column):
     negative_count = (df[column] < 0).sum()
     zero_count = (df[column] == 0).sum()
 
-    return negative_count, zero_count
+    return {
+    "negative_count": negative_count,
+    "zero_count": zero_count
+}
