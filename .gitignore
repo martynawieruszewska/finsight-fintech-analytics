@@ -5,3 +5,21 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 .env
+
+# Environment
+.env
+.venv/
+
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# R
+.Rhistory
