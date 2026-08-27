@@ -17,4 +17,6 @@ Important:
 -- WARNING: This permanently removes the entire database and all its objects.
 -- DROP DATABASE IF EXISTS finsight;
 
+-- drop database if exists finsight;
+
 create database finsight;
