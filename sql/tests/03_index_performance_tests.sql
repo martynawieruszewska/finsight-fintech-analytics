@@ -67,3 +67,16 @@ explain analyze
 select count(*)
 from analytics.fact_transactions
 where merchant_id = 59935;
+
+-- =============================================================================
+-- Index Validation
+-- =============================================================================
+-- Lists all indexes created on the analytics fact_transactions table.
+
+select
+    indexname,
+    indexdef
+from pg_indexes
+where schemaname = 'analytics'
+    and tablename = 'fact_transactions'
+order by indexname;
