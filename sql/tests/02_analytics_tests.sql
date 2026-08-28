@@ -100,3 +100,35 @@ select
     (select count(*)
      from analytics.fact_transactions
      where is_fraud = true) as analytics_fraud_rows;
+    
+  -- =============================================================================
+-- Orphan Foreign Key Validation
+-- =============================================================================
+
+select
+    count(*) as orphan_user_keys
+from analytics.fact_transactions f
+left join analytics.dim_users u
+    on f.user_key = u.user_key
+where u.user_key is null;
+
+select
+    count(*) as orphan_card_keys
+from analytics.fact_transactions f
+left join analytics.dim_cards c
+    on f.card_key = c.card_key
+where c.card_key is null;
+
+select
+    count(*) as orphan_mcc_keys
+from analytics.fact_transactions f
+left join analytics.dim_mcc m
+    on f.mcc_key = m.mcc_key
+where m.mcc_key is null;
+
+select
+    count(*) as orphan_date_keys
+from analytics.fact_transactions f
+left join analytics.dim_date d
+    on f.date_key = d.date_key
+where d.date_key is null;
