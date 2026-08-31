@@ -299,3 +299,9 @@ from cards_per_user
 group by number_of_cards
 order by number_of_cards;
 
+-- =============================================================================
+-- Time Trend Analysis
+-- =============================================================================
+-- analyzes long-term transaction trends using rolling metrics
+-- to reduce short-term monthly fluctuations
+
