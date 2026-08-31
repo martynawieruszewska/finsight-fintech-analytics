@@ -171,7 +171,28 @@ from monthly_transaction_value
 )t
 order by month;
 
+-- =============================================================================
+-- Transaction Value Seasonality Analysis
+-- =============================================================================
+-- investigates recurring monthly patterns in transaction value
+-- and checks whether they are explained by differences in month length
 
+with monthly_net_value as (
+select 
+	date_trunc('month', transaction_timestamp) as month,
+	sum(amount) as net_transaction_value,
+	count(distinct date_trunc('day', transaction_timestamp)) as days_in_month
+from analytics.fact_transactions 
+group by date_trunc('month', transaction_timestamp)
+)
+
+select 
+	month,
+	net_transaction_value,
+	days_in_month,
+	round(net_transaction_value / days_in_month, 2) as average_daily_net_value
+from monthly_net_value
+	
 
 
 

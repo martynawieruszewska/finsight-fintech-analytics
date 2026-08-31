@@ -19,9 +19,13 @@ Transaction frequency shows noticeable month-to-month fluctuations despite a rel
 ## 3. Transaction Value
 
 **Observation:**  
-Monthly transaction value shows a long-term upward trend combined with a recurring seasonal pattern. Gross transaction value increased from approximately 4.90M at the beginning of the analyzed period to 5.57M at the end, while net transaction value increased from approximately 4.37M to 4.99M.
+Transaction value shows a long-term upward trend. Gross transaction value increased from approximately 4.90M at the beginning of the analyzed period to 5.57M at the end, while net transaction value increased from approximately 4.37M to 4.99M.
 
-A noticeable decline occurs repeatedly in February, followed by a strong recovery in March across multiple years.
+Monthly values initially appeared to show a recurring seasonal pattern, with noticeable declines in February followed by recoveries in March. However, after normalizing net transaction value by the number of days in each month, the February decline largely disappears.
+
+For example, in 2019 average daily net transaction value was approximately 161.9K in January, 162.1K in February, and 163.8K in March.
 
 **Business interpretation:**  
-The long-term increase in transaction value suggests growing customer activity on the platform. At the same time, the recurring February decline and March recovery indicate a potential seasonal pattern in customer spending rather than isolated monthly fluctuations.
+Transaction value increased over the analyzed period, indicating growth in overall platform activity. The recurring February decline in monthly transaction value is primarily explained by the shorter length of the month rather than a meaningful decrease in daily customer spending.
+
+This demonstrates the importance of normalizing time-based KPIs before interpreting recurring monthly patterns as seasonality.
