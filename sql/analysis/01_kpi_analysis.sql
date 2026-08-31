@@ -7,6 +7,9 @@ Purpose:
     - Measures transaction frequency, value, and fraud.
 ===============================================================================
 */
+select
+*
+from analytics.fact_transactions;
 
 -- =============================================================================
 -- Active Users
@@ -41,4 +44,33 @@ select
 	active_users - lag(active_users) over(order by month) as difference
 from monthly_active_users
 	)t;
-	
+
+-- =============================================================================
+-- Transaction Frequency
+-- =============================================================================
+select
+	month, 	
+	transactions,
+	active_users,
+	transactions_per_user,
+	difference,
+	round((difference::numeric / (lag(transactions_per_user) over(order by month))::numeric)*100, 2) as percentage_change
+from (
+with monthly_transaction_frequency as (
+select
+	date_trunc('month', transaction_timestamp) as month,
+	count(transaction_key) as transactions,
+	count(distinct user_key) as active_users,
+	round(count(transaction_key)::numeric/count(distinct user_key)::numeric, 2) as transactions_per_user
+from analytics.fact_transactions
+group by date_trunc('month', transaction_timestamp)
+)
+
+select 
+	month, 	
+	transactions,
+	active_users,
+	transactions_per_user,
+	transactions_per_user - lag(transactions_per_user) over(order by month) as difference
+from monthly_transaction_frequency
+)t
