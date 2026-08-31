@@ -7,6 +7,7 @@ Purpose:
     - Measures transaction frequency, value, and fraud.
 ===============================================================================
 */
+
 select
 *
 from analytics.fact_transactions;
@@ -14,6 +15,7 @@ from analytics.fact_transactions;
 -- =============================================================================
 -- Active Users
 -- =============================================================================
+
 select 
 count(distinct user_key) as active_users
 from analytics.fact_transactions; 
@@ -48,6 +50,7 @@ from monthly_active_users
 -- =============================================================================
 -- Transaction Frequency
 -- =============================================================================
+
 select
 	month, 	
 	transactions,
@@ -74,3 +77,63 @@ select
 	transactions_per_user - lag(transactions_per_user) over(order by month) as difference
 from monthly_transaction_frequency
 )t
+
+-- =============================================================================
+-- Transaction Value
+-- =============================================================================
+
+select
+	transactions,
+	negative_transactions,
+	round(negative_transactions::numeric / transactions::numeric*100, 2) as negative_percentage
+from (
+select 
+	count(*) as transactions,
+	count(*) filter (where amount < 0) as negative_transactions
+from analytics.fact_transactions
+)t;
+
+-- Negative Transaction Analysis
+
+select
+	user_key,
+    transaction_id,
+    transaction_timestamp,
+    amount,
+    merchant_id,
+    mcc_key
+from analytics.fact_transactions
+where user_key = 1982 and merchant_id = 59935
+order by transaction_timestamp;
+
+-- Gross Transaction Value
+-- Calculates the total value of positive transactions only.
+-- Negative transactions are excluded because they may represent refunds or reversals.
+
+select 
+	sum(amount) filter (where amount > 0) as gross_transaction_value,
+	sum(amount) as net_transaction_value,
+	round(avg(amount) filter (where amount > 0), 2) as average_transaction_value
+from analytics.fact_transactions;
+
+-- Monthly Transaction Value
+
+select 
+	date_trunc('month', transaction_timestamp) as month,
+	sum(amount) filter (where amount > 0) as gross_transaction_value,
+	sum(amount) as net_transaction_value,
+	round(avg(amount) filter (where amount > 0), 2) as average_transaction_value
+from analytics.fact_transactions
+group by date_trunc('month', transaction_timestamp);
+
+-- Transaction Date Range
+-- Checks whether the first and last months contain complete transaction data.
+
+select 
+	min(transaction_timestamp) as min_transaction_date,
+	max(transaction_timestamp) as max_transaction_date
+from analytics.fact_transactions 
+
+
+
+
