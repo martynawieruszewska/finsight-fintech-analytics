@@ -60,4 +60,6 @@ Users hold an average of 3.07 cards. The most common number of cards per user is
 Most users hold between one and four cards, while higher card ownership becomes progressively less common. Only a small share of users hold seven or more cards.
 
 **Business interpretation:**  
-Card ownership
+Card ownership is concentrated around a relatively small number of cards per customer, with three cards being the most typical configuration.
+
+This suggests that most customers maintain a moderate number of cards, while users with very high card ownership represent a relatively small segment. These higher-card users may be worth analyzing separately, as they could exhibit different transaction behavior, spending patterns, or product usage.
