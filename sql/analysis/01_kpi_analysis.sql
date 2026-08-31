@@ -134,6 +134,44 @@ select
 	max(transaction_timestamp) as max_transaction_date
 from analytics.fact_transactions 
 
+-- Monthly Transaction Value Trend
+-- Analyzes month-to-month changes in net transaction value
+-- and average transaction value.
+
+select 
+	month,
+	gross_transaction_value,
+	gross_value_difference,
+	net_transaction_value,
+	net_value_difference,
+	round(net_value_difference::numeric / lag(net_transaction_value) over (order by month)*100, 2) as net_value_percentage_change,
+	average_transaction_value,
+	average_value_difference,
+	round(average_value_difference::numeric / lag(average_transaction_value) over (order by month)*100, 2) as average_value_percentage_change
+from (
+with monthly_transaction_value as (
+select 
+	date_trunc('month', transaction_timestamp) as month,
+	sum(amount) filter (where amount > 0) as gross_transaction_value,
+	sum(amount) as net_transaction_value,
+	round(avg(amount) filter (where amount > 0), 2) as average_transaction_value
+from analytics.fact_transactions
+group by date_trunc('month', transaction_timestamp)
+)
+
+select 
+	month,
+	gross_transaction_value,
+	gross_transaction_value - lag(gross_transaction_value) over(order by month) as gross_value_difference,
+	net_transaction_value,
+	net_transaction_value - lag(net_transaction_value) over(order by month) as net_value_difference,
+	average_transaction_value,
+	average_transaction_value - lag(average_transaction_value) over(order by month) as average_value_difference
+from monthly_transaction_value
+)t
+order by month;
+
+
 
 
 
