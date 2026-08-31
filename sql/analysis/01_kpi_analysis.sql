@@ -191,8 +191,79 @@ select
 	net_transaction_value,
 	days_in_month,
 	round(net_transaction_value / days_in_month, 2) as average_daily_net_value
-from monthly_net_value
-	
+from monthly_net_value;
 
+-- =============================================================================
+-- Fraud Rate
+-- =============================================================================
+
+select 
+	total_transactions,
+	labeled_transactions,
+	fraud_transactions,
+	round(((labeled_transactions::numeric / total_transactions::numeric) * 100), 2) as labeled_percentage,
+	round(((fraud_transactions::numeric / labeled_transactions::numeric) * 100), 2) as fraud_rate,
+	round(((fraud_transactions::numeric / total_transactions::numeric) * 100), 2) as fraud_percentage_of_total
+from (
+select 
+	count(*) as total_transactions,
+	count(*) filter (where is_fraud is not null) as labeled_transactions,
+	count(*) filter (where is_fraud is True) as fraud_transactions
+from analytics.fact_transactions
+)t;
+
+-- =============================================================================
+-- Fraud Label Coverage Over Time
+-- =============================================================================
+
+select 
+	month,
+	total_transactions,
+	labeled_transactions,
+	fraud_transactions,
+	round(((labeled_transactions::numeric / total_transactions::numeric) * 100), 2) as labeled_percentage,
+	round(((fraud_transactions::numeric / labeled_transactions::numeric) * 100), 2) as fraud_rate,
+	round(((fraud_transactions::numeric / total_transactions::numeric) * 100), 2) as fraud_percentage_of_total
+from (
+select 
+	date_trunc('month', transaction_timestamp) as month,
+	count(*) as total_transactions,
+	count(*) filter (where is_fraud is not null) as labeled_transactions,
+	count(*) filter (where is_fraud is True) as fraud_transactions
+from analytics.fact_transactions
+group by date_trunc('month', transaction_timestamp)
+)t
+order by month;
+
+select 
+	day,
+	total_transactions,
+	labeled_transactions,
+	fraud_transactions,
+	round(((labeled_transactions::numeric / total_transactions::numeric) * 100), 2) as labeled_percentage,
+	round(((fraud_transactions::numeric / labeled_transactions::numeric) * 100), 2) as fraud_rate,
+	round(((fraud_transactions::numeric / total_transactions::numeric) * 100), 2) as fraud_percentage_of_total
+from (
+select 
+	date_trunc('day', transaction_timestamp) as day,
+	count(*) as total_transactions,
+	count(*) filter (where is_fraud is not null) as labeled_transactions,
+	count(*) filter (where is_fraud is True) as fraud_transactions
+from analytics.fact_transactions
+group by date_trunc('day', transaction_timestamp)
+)t
+order by month;
+
+select
+	is_fraud,
+	round(avg(amount), 2) as average_transaction_value,
+	min(amount) as min_transaction_value,
+	max(amount) as max_transaction_value,
+	percentile_cont(0.25) within group (order by amount) as q1,
+	percentile_cont(0.5) within group (order by amount) as median_transaction_value,
+	percentile_cont(0.75) within group (order by amount) as q3
+from analytics.fact_transactions
+where amount > 0 and is_fraud is not null
+group by is_fraud;
 
 

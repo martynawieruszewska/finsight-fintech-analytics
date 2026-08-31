@@ -29,3 +29,25 @@ For example, in 2019 average daily net transaction value was approximately 161.9
 Transaction value increased over the analyzed period, indicating growth in overall platform activity. The recurring February decline in monthly transaction value is primarily explained by the shorter length of the month rather than a meaningful decrease in daily customer spending.
 
 This demonstrates the importance of normalizing time-based KPIs before interpreting recurring monthly patterns as seasonality.
+
+## 4. Fraud Transaction Analysis
+
+**Observation:**  
+Approximately 67% of all transactions have a known fraud label. Among labeled transactions, approximately 0.15% are classified as fraudulent.
+
+Despite their low frequency, fraudulent transactions tend to involve substantially higher transaction values than non-fraudulent transactions. The average positive transaction value is 125.37 for fraudulent transactions compared with 50.47 for non-fraudulent transactions.
+
+The difference is also visible across the transaction value distribution:
+
+- 25th percentile: 23.09 vs 11.07
+- Median: 74.00 vs 31.89
+- 75th percentile: 152.43 vs 66.25
+
+Fraud label coverage remains stable at approximately 67% across the analyzed period. However, fraud occurrence varies considerably over time, including extended periods with no transactions labeled as fraudulent.
+
+**Business interpretation:**  
+Although fraudulent transactions represent only a small proportion of labeled transactions, their typical transaction value is more than twice as high as that of non-fraudulent transactions. This suggests that fraud may have a disproportionate financial impact relative to its frequency.
+
+The consistently higher transaction values across multiple percentiles indicate that this difference is not driven solely by a small number of extreme transactions. Transaction amount may therefore be a useful feature for further fraud analysis and predictive modeling.
+
+Periods with zero observed fraud should be interpreted cautiously, as they may reflect characteristics of the dataset or labeling process rather than the complete absence of fraudulent activity.
