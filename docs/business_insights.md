@@ -51,3 +51,13 @@ Although fraudulent transactions represent only a small proportion of labeled tr
 The consistently higher transaction values across multiple percentiles indicate that this difference is not driven solely by a small number of extreme transactions. Transaction amount may therefore be a useful feature for further fraud analysis and predictive modeling.
 
 Periods with zero observed fraud should be interpreted cautiously, as they may reflect characteristics of the dataset or labeling process rather than the complete absence of fraudulent activity.
+
+## 5. Cards per User
+
+**Observation:**  
+Users hold an average of 3.07 cards. The most common number of cards per user is three, held by 449 users, representing 22.45% of all users.
+
+Most users hold between one and four cards, while higher card ownership becomes progressively less common. Only a small share of users hold seven or more cards.
+
+**Business interpretation:**  
+Card ownership

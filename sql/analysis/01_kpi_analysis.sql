@@ -266,4 +266,36 @@ from analytics.fact_transactions
 where amount > 0 and is_fraud is not null
 group by is_fraud;
 
+-- =============================================================================
+-- Cards per User
+-- =============================================================================
+
+with cards_per_user as (
+	select 
+		user_key,
+		count(card_key) as number_of_cards
+	from analytics.dim_cards
+	group by user_key
+)
+
+select
+	round(avg(number_of_cards), 2) as average_cards_per_user
+from cards_per_user;
+
+
+with cards_per_user as (
+	select 
+		user_key,
+		count(card_key) as number_of_cards
+	from analytics.dim_cards
+	group by user_key
+)
+
+select
+	number_of_cards,
+	count(*) as users,
+	round(count(*)::numeric / sum(count(*)) over () * 100, 2) as percentage_of_users
+from cards_per_user
+group by number_of_cards
+order by number_of_cards;
 
