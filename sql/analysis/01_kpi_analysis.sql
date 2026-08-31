@@ -305,3 +305,36 @@ order by number_of_cards;
 -- analyzes long-term transaction trends using rolling metrics
 -- to reduce short-term monthly fluctuations
 
+with monthly_net_value as (
+	select 
+		date_trunc('month', transaction_timestamp) as month,
+		sum(amount) as net_transaction_value
+	from analytics.fact_transactions
+	group by date_trunc('month', transaction_timestamp)
+)
+
+select 
+	month,
+	net_transaction_value,
+	round(avg(net_transaction_value) over (order by month rows between 2 preceding and current row), 2) as rolling_3m_avg
+from monthly_net_value;
+
+with monthly_transaction_frequency as (
+select
+	date_trunc('month', transaction_timestamp) as month,
+	count(transaction_key) as transactions,
+	count(distinct user_key) as active_users,
+	round(count(transaction_key)::numeric/count(distinct user_key)::numeric, 2) as transactions_per_user
+from analytics.fact_transactions
+group by date_trunc('month', transaction_timestamp)
+)
+
+select
+	month,
+	transactions,
+	active_users,
+	transactions_per_user,
+	round(avg(transactions_per_user) over(order by month rows between 2 preceding and current row), 2) as rolling_3m_avg
+from monthly_transaction_frequency
+order by month;
+

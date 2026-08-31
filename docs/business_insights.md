@@ -63,3 +63,17 @@ Most users hold between one and four cards, while higher card ownership becomes 
 Card ownership is concentrated around a relatively small number of cards per customer, with three cards being the most typical configuration.
 
 This suggests that most customers maintain a moderate number of cards, while users with very high card ownership represent a relatively small segment. These higher-card users may be worth analyzing separately, as they could exhibit different transaction behavior, spending patterns, or product usage.
+
+## 6. Long-Term Transaction Trends
+
+**Observation:**  
+Three-month rolling averages reveal a gradual increase in platform activity while reducing short-term monthly fluctuations.
+
+The rolling average of net transaction value increased from approximately 4.34M in early 2010 to around 5.0M in the later years of the analyzed period. However, growth gradually slowed and transaction value remained relatively stable around this level toward the end of the period.
+
+At the same time, the three-month rolling average of transactions per active user increased from approximately 91–94 transactions in the early period to around 97–98 transactions in later years.
+
+**Business interpretation:**  
+The long-term trend indicates that customers became more transactionally active over time. However, the increase in transaction frequency was not accompanied by equally strong growth in transaction value during the later years.
+
+This suggests that platform engagement continued to strengthen while overall transaction value gradually reached a more stable level.
