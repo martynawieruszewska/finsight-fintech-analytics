@@ -77,3 +77,27 @@ At the same time, the three-month rolling average of transactions per active use
 The long-term trend indicates that customers became more transactionally active over time. However, the increase in transaction frequency was not accompanied by equally strong growth in transaction value during the later years.
 
 This suggests that platform engagement continued to strengthen while overall transaction value gradually reached a more stable level.
+
+## 7. Merchant Category Transaction Patterns
+
+**Observation:**  
+Transaction activity varies substantially across merchant categories. Grocery Stores and Supermarkets generate the highest transaction volume, with approximately 1.59M transactions and an average ticket of 25.73.
+
+In contrast, Money Transfer generates fewer transactions (approximately 589K) but the highest gross transaction value among the major categories, reaching approximately 53.16M with an average ticket of 91.89.
+
+**Business interpretation:**  
+High transaction volume does not necessarily translate into the highest transaction value. Everyday spending categories such as groceries are characterized by frequent, relatively low-value transactions, while categories such as Money Transfer generate considerably more value per transaction.
+
+This highlights the importance of considering both transaction frequency and average ticket size when evaluating the business significance of merchant categories.
+
+## 8. Fraud Risk Across Merchant Categories
+
+**Observation:**  
+Fraud activity differs considerably across merchant categories. Among categories with at least 10,000 labeled transactions, Passenger Railways has the highest fraud rate at 1.45%, compared with an overall fraud rate of approximately 0.15%.
+
+However, Department Stores generate the highest absolute number of fraudulent transactions, with 2,251 fraud cases and a fraud rate of 0.71%.
+
+**Business interpretation:**  
+Fraud rate and fraud volume capture different dimensions of fraud exposure. Categories with the highest relative fraud risk do not necessarily generate the largest number of fraudulent transactions.
+
+Department Stores stand out because they combine a relatively high fraud rate with a large transaction base, resulting in substantial fraud volume. This suggests that fraud monitoring strategies should consider both the probability of fraud within a category and the absolute number of fraud cases rather than relying on fraud rate alone.
