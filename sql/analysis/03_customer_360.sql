@@ -1,3 +1,20 @@
+/*
+===============================================================================
+FinSight - Customer 360 Analysis
+===============================================================================
+Purpose:
+    - Builds a customer-level analytical view.
+    - Summarizes transaction activity, spending, recency, card ownership,
+      and fraud activity for each user.
+    - Provides the foundation for customer segmentation and RFM analysis.
+===============================================================================
+*/
+
+-- =============================================================================
+-- Customer 360
+-- =============================================================================
+-- one row represents one customer and summarizes their overall activity
+
 with dataset_end as (
 	select
 		max(transaction_timestamp) as dataset_end_date
