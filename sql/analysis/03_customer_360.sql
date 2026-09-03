@@ -15,6 +15,10 @@ Purpose:
 -- =============================================================================
 -- one row represents one customer and summarizes their overall activity
 
+drop materialized view if exists analytics.customer_360;
+
+create materialized view analytics.customer_360 as
+
 with dataset_end as (
 	select
 		max(transaction_timestamp) as dataset_end_date
@@ -57,7 +61,7 @@ customer_cards as (
 )
 
 select
-	c.user_key,
+	u.user_key,
 	c.transaction_count,
 	c.gross_total_spend,
 	c.avg_ticket,
@@ -67,11 +71,13 @@ select
 	d.dataset_end_date::date - c.last_transaction_date::date as recency_days,
 	cc.card_count,
 	c.fraud_count
-from customer_metrics c
+from analytics.dim_users u
+left join customer_metrics c
+	on u.user_key = c.user_key
 left join active_months a
-	on c.user_key = a.user_key
-cross join dataset_end d
+	on u.user_key = a.user_key
 left join customer_cards cc
-	on c.user_key = cc.user_key
-order by user_key;
+	on u.user_key = cc.user_key
+cross join dataset_end d
+order by u.user_key;
 
