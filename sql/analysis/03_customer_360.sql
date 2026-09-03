@@ -81,3 +81,10 @@ left join customer_cards cc
 cross join dataset_end d
 order by u.user_key;
 
+
+select count(*)
+from analytics.customer_360;
+
+select count(*)
+from analytics.customer_360
+where transaction_count is null;
