@@ -101,3 +101,15 @@ However, Department Stores generate the highest absolute number of fraudulent tr
 Fraud rate and fraud volume capture different dimensions of fraud exposure. Categories with the highest relative fraud risk do not necessarily generate the largest number of fraudulent transactions.
 
 Department Stores stand out because they combine a relatively high fraud rate with a large transaction base, resulting in substantial fraud volume. This suggests that fraud monitoring strategies should consider both the probability of fraud within a category and the absolute number of fraud cases rather than relying on fraud rate alone.
+
+## Insight #9 — Customer Segmentation
+
+RFM segmentation shows that the customer base is dominated by recently active users. Among 1,219 customers with transaction history, 28.96% are classified as Champions, 26.50% as Promising, 21.82% as Active Customers, and 19.85% as Loyal Customers.
+
+Together, these four high-recency segments represent 97.13% of active customers. This is consistent with the underlying Recency distribution, where the vast majority of customers made a transaction within the final two days of the dataset.
+
+Only 0.16% of customers are classified as At Risk and 0.98% as Need Attention. Rather than indicating unusually strong retention, this result reflects the highly concentrated Recency distribution in the dataset and should therefore be interpreted cautiously.
+
+### Business implication
+
+The largest opportunity lies in differentiating recently active customers by their transaction frequency and monetary value. Champions and Loyal Customers represent the strongest candidates for retention and loyalty initiatives, while Promising and Active Customers provide opportunities for increasing transaction frequency and customer value through targeted engagement.
