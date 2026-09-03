@@ -191,7 +191,7 @@ select
 		when r_score >= 4
 			and f_score <= 2
 			and m_score <= 2
-			then 'new / promising'
+			then 'promising'
 
 		when r_score >= 4
 			then 'active customers'
