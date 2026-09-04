@@ -10,6 +10,12 @@ Purpose:
 ===============================================================================
 */
 
+-- =============================================================================
+-- Customer Activation
+-- =============================================================================
+-- identifies each customer's first observed transaction
+-- and groups customers by their first observed transaction month
+
 with customer_activation as (
 select 
 	user_key,
@@ -23,6 +29,12 @@ select
 	count(user_key) as nr_of_cust
 from customer_activation
 group by first_transaction_month;
+
+-- =============================================================================
+-- Repeat Activity
+-- =============================================================================
+-- identifies the first and second observed transaction for each customer
+-- and measures the time between them
 
 with ranked_transactions as (
 	select
