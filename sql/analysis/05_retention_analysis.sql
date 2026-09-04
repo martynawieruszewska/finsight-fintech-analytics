@@ -84,6 +84,10 @@ from repeat_activity_gaps;
 -- assigns customers to cohorts based on their first observed transaction month
 -- and tracks their transaction activity across subsequent months
 
+drop view if exists analytics.cohort_retention;
+
+create view analytics.cohort_retention as
+
 with cohort_activity as (
 select 	
 	user_key,
@@ -141,4 +145,8 @@ from cohort_with_size
 order by
 	cohort_month,
 	months_since_first_transaction;
+
+select *
+from analytics.cohort_retention
+order by cohort_month, months_since_first_transaction;
 	
