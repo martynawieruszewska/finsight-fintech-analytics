@@ -129,3 +129,16 @@ A key opportunity lies in differentiating recently active customers by transacti
 Champions and Loyal Customers represent strong candidates for retention and loyalty initiatives, while Promising and Active Customers may provide opportunities to increase transaction frequency and customer value through targeted engagement.
 
 The very small At Risk and Need Attention segments should not be interpreted as evidence of exceptionally low churn risk without further analysis, as their size is strongly influenced by the structure of the Recency variable.
+
+
+## 10. Customer Repeat Activity
+
+**Observation:**  
+All 1,219 customers with transaction history made at least two observed transactions, resulting in a repeat transaction rate of 100%.
+
+The median time between the first and second observed transaction is approximately 4 hours and 37 minutes. In contrast, the average gap is approximately 4.7 days, while the maximum reaches 555 days.
+
+**Business interpretation:**  
+Customers typically make another transaction relatively quickly after their first observed activity. The substantial difference between the median and average indicates a strongly right-skewed distribution, with a relatively small number of long gaps considerably increasing the average.
+
+The 100% repeat rate should not be interpreted as evidence of perfect customer retention. Most customers were already active at the beginning of the dataset, meaning that the first transaction observed in the data does not necessarily represent their actual first-ever transaction.
