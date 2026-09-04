@@ -142,3 +142,17 @@ The median time between the first and second observed transaction is approximate
 Customers typically make another transaction relatively quickly after their first observed activity. The substantial difference between the median and average indicates a strongly right-skewed distribution, with a relatively small number of long gaps considerably increasing the average.
 
 The 100% repeat rate should not be interpreted as evidence of perfect customer retention. Most customers were already active at the beginning of the dataset, meaning that the first transaction observed in the data does not necessarily represent their actual first-ever transaction.
+
+## 11. Retention by Card Ownership
+
+**Observation:**  
+Customer retention remains exceptionally high across all card ownership groups. At the one-month checkpoint, weighted retention reaches 99.69% among high card ownership customers, compared with 97.63% for multi-card customers and 97.83% for single-card customers.
+
+The differences gradually narrow over time. At six months, retention reaches 99.85% for high card ownership customers, 98.93% for multi-card customers, and 98.95% for single-card customers. By month 12, retention reaches 100.00% for both high and single-card customers and 99.57% for multi-card customers.
+
+**Business interpretation:**  
+Higher card ownership is associated with slightly stronger early retention, particularly during the first months of observed customer activity. However, the differences between card ownership groups become negligible over longer retention periods.
+
+This suggests that card ownership may be related to early customer engagement, but it does not appear to meaningfully differentiate long-term retention within this dataset.
+
+These results should be interpreted cautiously due to the exceptionally high overall activity levels and uneven cohort sizes. In particular, the first observed transaction represents the beginning of the available observation period rather than necessarily the customer's true acquisition date.
