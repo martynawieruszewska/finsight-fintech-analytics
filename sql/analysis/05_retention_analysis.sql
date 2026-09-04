@@ -22,7 +22,7 @@ select
 	first_transaction_month,
 	count(user_key) as nr_of_cust
 from customer_activation
-group by first_transaction_month
+group by first_transaction_month;
 
 with ranked_transactions as (
 	select
@@ -62,5 +62,6 @@ select
 	min(gap) as min_gap,
 	avg(gap) as avg_gap,
 	percentile_cont(0.5) within group (order by gap) AS median_gap,
-	max(gap) as max_gap
+	max(gap) as max_gap,
+	round(count(second_transaction)::numeric/count(user_key)*100, 2) as repeat_rate
 from repeat_activity_gaps;

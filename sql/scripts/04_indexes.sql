@@ -56,3 +56,12 @@ on analytics.fact_transactions(date_key);
 
 create index if not exists idx_fact_transactions_merchant_id
 on analytics.fact_transactions(merchant_id);
+
+-- =============================================================================
+-- Customer Lifecycle Index
+-- =============================================================================
+-- Supports customer-level chronological analysis by user and transaction time.
+-- Used for lifecycle, repeat activity, and retention analysis.
+
+create index idx_fact_transactions_user_timestamp
+on analytics.fact_transactions (user_key, transaction_timestamp);
