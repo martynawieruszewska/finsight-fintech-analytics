@@ -77,3 +77,68 @@ select
 	max(gap) as max_gap,
 	round(count(second_transaction)::numeric/count(user_key)*100, 2) as repeat_rate
 from repeat_activity_gaps;
+
+-- =============================================================================
+-- Cohort Analysis
+-- =============================================================================
+-- assigns customers to cohorts based on their first observed transaction month
+-- and tracks their transaction activity across subsequent months
+
+with cohort_activity as (
+select 	
+	user_key,
+	min(date_trunc('month', transaction_timestamp)) over (partition by user_key) as cohort_month,
+	date_trunc('month', transaction_timestamp) as activity_month
+from analytics.fact_transactions
+), cohort_lifecycle as (
+
+select 
+	user_key,
+	cohort_month,
+	activity_month,
+	(
+
+		extract(year from activity_month) - extract(year from cohort_month)
+	) * 12
+	+
+	(
+		extract(month from activity_month) - extract(month from cohort_month)
+	) as months_since_first_transaction
+from cohort_activity
+), 
+
+cohort_monthly_activity as (
+select
+	cohort_month,
+	months_since_first_transaction,
+	count(distinct user_key) as active_customers
+from cohort_lifecycle
+group by 
+	cohort_month,
+	months_since_first_transaction
+), 
+
+cohort_with_size as (
+	select
+		cohort_month,
+		months_since_first_transaction,
+		active_customers,
+		max(active_customers) filter (
+			where months_since_first_transaction = 0
+		) over (
+			partition by cohort_month
+		) as cohort_size
+	from cohort_monthly_activity
+)
+
+select
+	cohort_month,
+	months_since_first_transaction,
+	active_customers,
+	cohort_size,
+	round(active_customers::numeric / cohort_size * 100, 2) as retention_rate
+from cohort_with_size
+order by
+	cohort_month,
+	months_since_first_transaction;
+	
