@@ -146,7 +146,146 @@ order by
 	cohort_month,
 	months_since_first_transaction;
 
-select *
-from analytics.cohort_retention
-order by cohort_month, months_since_first_transaction;
+-- =============================================================================
+-- Retention by Customer Group
+-- =============================================================================
+-- compares cohort retention across customer groups based on card ownership
+
+
+-- Card ownership distribution
+-- used to define interpretable customer groups
+
+with customer_card_profile as (
+	select
+		user_key,
+		count(card_id) as number_of_cards
+	from analytics.dim_cards
+	group by user_key
+)
+
+select
+	number_of_cards,
+	count(user_key) as number_of_customers
+from customer_card_profile
+group by number_of_cards
+order by number_of_cards;
+
+
+-- Card ownership groups
+-- 1 card = single
+-- 2–3 cards = multi
+-- 4+ cards = high ownership
+
+with customer_card_profile as (
+	select
+		user_key,
+		count(card_id) as number_of_cards,
+		case
+			when count(card_id) >= 4 then 'high'
+			when count(card_id) between 2 and 3 then 'multi'
+			else 'single'
+		end as card_group
+	from analytics.dim_cards
+	group by user_key
+)
+
+select
+	card_group,
+	count(*) as number_of_customers
+from customer_card_profile
+group by card_group
+order by number_of_customers desc;
+
+-- =============================================================================
+-- Retention by Card Ownership Group
+-- =============================================================================
+-- compares monthly cohort retention across single-card, multi-card,
+-- and high card ownership customer groups
+
+with customer_card_profile as (
+	select
+		user_key,
+		case
+			when count(card_id) >= 4 then 'high'
+			when count(card_id) between 2 and 3 then 'multi'
+			else 'single'
+		end as card_group
+	from analytics.dim_cards
+	group by user_key
+),
+
+cohort_activity_by_card_group as (
+	select
+		t.user_key,
+		c.card_group,
+		min(date_trunc('month', t.transaction_timestamp)) over (
+			partition by t.user_key
+		) as cohort_month,
+		date_trunc('month', t.transaction_timestamp) as activity_month
+	from analytics.fact_transactions t
+	left join customer_card_profile c
+		on t.user_key = c.user_key
+), 
+
+cohort_lifecycle_by_card_group as (
+	select 
+		user_key,
+		card_group,
+		cohort_month,
+		activity_month,
+		(
+			extract(year from activity_month) - extract(year from cohort_month)
+		) * 12
+		+
+		(
+			extract(month from activity_month) - extract(month from cohort_month)
+		) as months_since_first_transaction
+	from cohort_activity_by_card_group
+),
+
+cohort_monthly_activity_by_card_group as (
+	select
+		card_group,
+		cohort_month,
+		months_since_first_transaction,
+		count(distinct user_key) as active_customers
+	from cohort_lifecycle_by_card_group
+	group by
+		card_group,
+		cohort_month,
+		months_since_first_transaction
+),
+
+cohort_with_size_by_card_group as (
+	select
+		card_group,
+		cohort_month,
+		months_since_first_transaction,
+		active_customers,
+		max(active_customers) filter (
+			where months_since_first_transaction = 0
+		) over (
+			partition by card_group, cohort_month
+		) as cohort_size
+	from cohort_monthly_activity_by_card_group
+)
+
+select
+	card_group,
+	months_since_first_transaction,
+	sum(active_customers) as active_customers,
+	sum(cohort_size) as total_cohort_size,
+	round(
+		sum(active_customers)::numeric / sum(cohort_size) * 100,
+		2
+	) as weighted_retention_rate
+from cohort_with_size_by_card_group
+where months_since_first_transaction in (1, 3, 6, 12)
+group by
+	card_group,
+	months_since_first_transaction
+order by
+	card_group,
+	months_since_first_transaction;
+
 	
