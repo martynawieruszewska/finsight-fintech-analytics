@@ -65,3 +65,12 @@ on analytics.fact_transactions(merchant_id);
 
 create index idx_fact_transactions_user_timestamp
 on analytics.fact_transactions (user_key, transaction_timestamp);
+
+-- =============================================================================
+-- Card Transaction History Index
+-- =============================================================================
+-- Supports card-level chronological analysis by card and transaction time.
+-- Used for fraud detection feature engineering and historical card behavior.
+
+create index idx_fact_transactions_card_timestamp
+on analytics.fact_transactions (card_key, transaction_timestamp);
