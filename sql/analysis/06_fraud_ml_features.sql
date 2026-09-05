@@ -48,6 +48,11 @@ select
 	) as fraud_rate_pct
 from analytics.fact_transactions;
 
+
+drop materialized view if exists analytics.fraud_ml_features;
+
+create materialized view analytics.fraud_ml_features as
+
 with transaction_features as (
 	select
 		transaction_key,
@@ -76,12 +81,46 @@ select
 	count(*) over (partition by card_key order by transaction_timestamp rows between unbounded preceding and 1 preceding) as card_previous_transaction_count,
 	round(avg(amount) over (partition by card_key order by transaction_timestamp rows between unbounded preceding and 1 preceding), 2) as card_previous_avg_amount
 from transaction_features
+), 
+
+ml_features as (
+
+select 
+	transaction_key,
+	transaction_timestamp,
+	
+	-- transaction features
+	amount,
+	mcc_key,
+	use_chip,
+	merchant_id,
+	transaction_hour,
+	day_of_week,
+	is_weekend,
+	
+	-- user features
+	user_previous_transaction_count,
+	user_previous_avg_amount,
+	round(amount - user_previous_avg_amount, 2) as amount_vs_user_avg,
+	
+	-- card historical features
+	card_previous_transaction_count,
+	card_previous_avg_amount,
+	round(amount - card_previous_avg_amount, 2) as amount_vs_card_avg,
+	
+	-- target
+	is_fraud
+from historical_features
+where is_fraud is not null
 )
 
 select 
-	*,
-	amount - user_previous_avg_amount as amount_vs_user_avg,
-	amount - card_previous_avg_amount as amount_vs_card_avg
-from historical_features
-order by transaction_timestamp
+	*
+from ml_features;
+
+select count(*)
+from analytics.fraud_ml_features;
+
+select *
+from analytics.fraud_ml_features
 limit 10;
