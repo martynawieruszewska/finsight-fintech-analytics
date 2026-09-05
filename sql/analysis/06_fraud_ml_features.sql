@@ -66,14 +66,22 @@ with transaction_features as (
 		end as is_weekend,
 		is_fraud
 	from analytics.fact_transactions
+),
+
+historical_features as (
+select 
+	*,
+	count(*) over (partition by user_key order by transaction_timestamp rows between unbounded preceding and 1 preceding) as user_previous_transaction_count,
+	round(avg(amount) over (partition by user_key order by transaction_timestamp rows between unbounded preceding and 1 preceding), 2) as user_previous_avg_amount,
+	count(*) over (partition by card_key order by transaction_timestamp rows between unbounded preceding and 1 preceding) as card_previous_transaction_count,
+	round(avg(amount) over (partition by card_key order by transaction_timestamp rows between unbounded preceding and 1 preceding), 2) as card_previous_avg_amount
+from transaction_features
 )
 
 select 
 	*,
-	count(*) over (partition by user_key order by transaction_timestamp rows between unbounded preceding and 1 preceding) as user_previous_transaction_count,
-	round(avg(amount) over (partition by user_key order by transaction_timestamp rows between unbounded preceding and 1 preceding), 2) as user_previous_avg_amount
-from transaction_features
-where user_key = 1
+	amount - user_previous_avg_amount as amount_vs_user_avg,
+	amount - card_previous_avg_amount as amount_vs_card_avg
+from historical_features
 order by transaction_timestamp
 limit 10;
- 
