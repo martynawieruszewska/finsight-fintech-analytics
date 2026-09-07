@@ -17,6 +17,20 @@ The goal is to build a reproducible analytical workflow that transforms raw fina
 - Matplotlib
 - PyArrow
 
+## Dataset
+
+This project uses the **Financial Transactions Dataset: Analytics**, originally created by CaixaBank Tech for the 2024 AI Hackathon and distributed via Kaggle.
+
+The dataset contains five source files:
+
+- `transactions_data.csv` — transaction-level data
+- `users_data.csv` — customer information
+- `cards_data.csv` — payment card information
+- `mcc_codes.json` — Merchant Category Code descriptions
+- `train_fraud_labels.json` — fraud labels for transactions
+
+The raw dataset is not included in this repository due to its size. It can be downloaded from the [Kaggle dataset page](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets/data).
+
 ## Project Workflow
 
 ```text
