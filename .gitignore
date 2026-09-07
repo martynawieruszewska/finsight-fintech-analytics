@@ -1,10 +1,13 @@
+# Local project files
 finsight_workflow.html
+finsight_roadmap_updated.html
+
+# Data
 data/raw/*
-.DS_Store
 !data/raw/.gitkeep
+
 data/processed/*
 !data/processed/.gitkeep
-.env
 
 # Environment
 .env
@@ -23,5 +26,3 @@ __pycache__/
 
 # R
 .Rhistory
-finsight_roadmap_updated.html
-.env
