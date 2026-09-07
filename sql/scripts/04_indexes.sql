@@ -63,7 +63,7 @@ on analytics.fact_transactions(merchant_id);
 -- Supports customer-level chronological analysis by user and transaction time.
 -- Used for lifecycle, repeat activity, and retention analysis.
 
-create index idx_fact_transactions_user_timestamp
+create index if not exists idx_fact_transactions_user_timestamp
 on analytics.fact_transactions (user_key, transaction_timestamp);
 
 -- =============================================================================
@@ -72,5 +72,5 @@ on analytics.fact_transactions (user_key, transaction_timestamp);
 -- Supports card-level chronological analysis by card and transaction time.
 -- Used for fraud detection feature engineering and historical card behavior.
 
-create index idx_fact_transactions_card_timestamp
+create index if not exists idx_fact_transactions_card_timestamp
 on analytics.fact_transactions (card_key, transaction_timestamp);
