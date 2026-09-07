@@ -24,3 +24,4 @@ __pycache__/
 # R
 .Rhistory
 finsight_roadmap_updated.html
+.env
