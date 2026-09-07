@@ -76,7 +76,7 @@ select
 	transactions_per_user,
 	transactions_per_user - lag(transactions_per_user) over(order by month) as difference
 from monthly_transaction_frequency
-)t
+)t;
 
 -- =============================================================================
 -- Transaction Value
@@ -132,7 +132,7 @@ group by date_trunc('month', transaction_timestamp);
 select 
 	min(transaction_timestamp) as min_transaction_date,
 	max(transaction_timestamp) as max_transaction_date
-from analytics.fact_transactions 
+from analytics.fact_transactions; 
 
 -- Monthly Transaction Value Trend
 -- Analyzes month-to-month changes in net transaction value
@@ -252,7 +252,7 @@ select
 from analytics.fact_transactions
 group by date_trunc('day', transaction_timestamp)
 )t
-order by month;
+order by day;
 
 select
 	is_fraud,
