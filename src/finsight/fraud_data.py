@@ -1,24 +1,5 @@
-import os
-
 import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
-
-
-# Create database engine
-def connect_to_database():
-    load_dotenv()
-
-    engine = create_engine(
-        f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-        f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-    )
-
-    with engine.connect():
-        print("Connected!")
-
-    return engine
-
+from sqlalchemy import text
 
 # Split dataframe into features and target
 def get_data(df):
@@ -33,7 +14,6 @@ def get_data(df):
     y = df["is_fraud"]
 
     return X, y
-
 
 # Load training data
 def download_train_data(engine, non_fraud_limit=300000):
@@ -64,7 +44,6 @@ def download_train_data(engine, non_fraud_limit=300000):
     X_train, y_train = get_data(train_df)
 
     return X_train, y_train
-
 
 # Load validation data
 def download_validation_data(engine):

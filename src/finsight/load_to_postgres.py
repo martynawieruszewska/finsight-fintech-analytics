@@ -1,45 +1,21 @@
 from pathlib import Path
-import os
 import time
 
 import pandas as pd
-from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+
+from finsight.database import connect_to_database
 
 
 # --- Paths ---
 
-project_root = Path(__file__).resolve().parent.parent
-env_path = project_root / ".env"
+project_root = Path(__file__).resolve().parent.parent.parent
 processed_path = project_root / "data" / "processed"
-
-
-# --- Environment Variables ---
-
-load_dotenv(env_path)
-
-db_host = os.getenv("DB_HOST")
-db_port = os.getenv("DB_PORT")
-db_name = os.getenv("DB_NAME")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
 
 
 # --- Database Connection ---
 
-database_url = (
-    f"postgresql+psycopg2://{db_user}:{db_password}"
-    f"@{db_host}:{db_port}/{db_name}"
-)
-
-engine = create_engine(database_url)
-
-with engine.connect() as connection:
-    result = connection.execute(
-        text("SELECT current_database();")
-    )
-
-    print(f"Connected to PostgreSQL database: {result.scalar()}")
+engine = connect_to_database()
 
 
 # --- Load Processed Data ---
