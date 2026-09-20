@@ -13,7 +13,9 @@ def connect_to_database():
         f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
     )
 
+    return engine
+    
+# Test database connection
+def test_database_connection(engine):
     with engine.connect():
         print("Connected!")
-
-    return engine
