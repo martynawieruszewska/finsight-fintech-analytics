@@ -55,7 +55,7 @@ Fraud detection modeling
 
 The project processes approximately **22.2 million records** across transaction, customer, card, merchant category, and fraud-label datasets.
 
-Data is validated and transformed in Python before being loaded into PostgreSQL. The current baseline staging load uses Pandas `to_sql()` with SQLAlchemy and processes the full dataset in approximately **10 minutes**.
+Data is validated and transformed in Python before being loaded into PostgreSQL. A baseline staging load using Pandas `to_sql()` with SQLAlchemy processed the full dataset in approximately **10 minutes**.
 
 Reusable Python functionality is organized as an installable `finsight` package under `src/`.
 
@@ -112,8 +112,6 @@ finsight-fintech-analytics/
 │   ├── raw/
 │   └── processed/
 │
-├── dashboard/
-│
 ├── docs/
 │   ├── business_insights.md
 │   └── load_performance.md
@@ -157,7 +155,6 @@ finsight-fintech-analytics/
 │
 ├── .env.example
 ├── pyproject.toml
-├── requirements.txt
 └── README.md
 ```
 
@@ -187,16 +184,10 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Install dependencies:
+Install the project and development dependencies:
 
 ```bash
-python3 -m pip install -r requirements.txt
-```
-
-Install the local project package in editable mode:
-
-```bash
-python3 -m pip install -e .
+python3 -m pip install -e ".[dev]"
 ```
 
 Create a local `.env` file based on:
