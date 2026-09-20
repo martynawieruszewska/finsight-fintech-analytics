@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy import text
 
 # Split dataframe into features and target
-def get_data(df):
+def split_features_target(df):
     X = df.drop(
         columns=[
             "transaction_key",
@@ -14,6 +14,7 @@ def get_data(df):
     y = df["is_fraud"]
 
     return X, y
+    
 
 # Load training data
 def download_train_data(engine, non_fraud_limit=300000):
@@ -41,9 +42,10 @@ def download_train_data(engine, non_fraud_limit=300000):
         params={"non_fraud_limit": non_fraud_limit}
     )
 
-    X_train, y_train = get_data(train_df)
+    X_train, y_train = split_features_target(train_df)
 
     return X_train, y_train
+    
 
 # Load validation data
 def download_validation_data(engine):
@@ -56,6 +58,6 @@ def download_validation_data(engine):
 
     val_df = pd.read_sql(val_query, engine)
 
-    X_val, y_val = get_data(val_df)
+    X_val, y_val = split_features_target(val_df)
 
     return X_val, y_val

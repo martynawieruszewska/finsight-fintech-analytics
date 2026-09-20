@@ -7,165 +7,169 @@ from sqlalchemy import text
 from finsight.database import connect_to_database
 
 
-# --- Paths ---
-
-project_root = Path(__file__).resolve().parent.parent.parent
-processed_path = project_root / "data" / "processed"
-
-
-# --- Database Connection ---
-
-engine = connect_to_database()
-
-
-# --- Load Processed Data ---
-
-users = pd.read_parquet(
-    processed_path / "users.parquet"
-)
-
-cards = pd.read_parquet(
-    processed_path / "cards.parquet"
-)
-
-transactions = pd.read_parquet(
-    processed_path / "transactions.parquet"
-)
-
-mcc_codes = pd.read_parquet(
-    processed_path / "mcc_codes.parquet"
-)
-
-fraud_labels = pd.read_parquet(
-    processed_path / "fraud_labels.parquet"
-)
-
-print(f"Loaded users.parquet: {len(users):,} rows")
-print(f"Loaded cards.parquet: {len(cards):,} rows")
-print(f"Loaded transactions.parquet: {len(transactions):,} rows")
-print(f"Loaded mcc_codes.parquet: {len(mcc_codes):,} rows")
-print(f"Loaded fraud_labels.parquet: {len(fraud_labels):,} rows")
-
-
-# --- Full Staging Reload ---
-
-reload_start = time.perf_counter()
-
-with engine.begin() as connection:
-    connection.execute(
-        text("""
-            TRUNCATE TABLE
-                staging.users,
-                staging.cards,
-                staging.transactions,
-                staging.mcc_codes,
-                staging.fraud_labels;
-        """)
-    )
-
-
-    # --- Load Data into PostgreSQL ---
+def main():
+    # --- Paths ---
     
-    users.to_sql(
-        name="users",
-        con=connection,
-        schema="staging",
-        if_exists="append",
-        index=False
+    project_root = Path(__file__).resolve().parent.parent.parent
+    processed_path = project_root / "data" / "processed"
+    
+    
+    # --- Database Connection ---
+    
+    engine = connect_to_database()
+    
+    
+    # --- Load Processed Data ---
+    
+    users = pd.read_parquet(
+        processed_path / "users.parquet"
     )
     
-    cards.to_sql(
-        name="cards",
-        con=connection,
-        schema="staging",
-        if_exists="append",
-        index=False
+    cards = pd.read_parquet(
+        processed_path / "cards.parquet"
     )
     
-    mcc_codes.to_sql(
-        name="mcc_codes",
-        con=connection,
-        schema="staging",
-        if_exists="append",
-        index=False
+    transactions = pd.read_parquet(
+        processed_path / "transactions.parquet"
     )
     
-    fraud_labels.to_sql(
-        name="fraud_labels",
-        con=connection,
-        schema="staging",
-        if_exists="append",
-        index=False
+    mcc_codes = pd.read_parquet(
+        processed_path / "mcc_codes.parquet"
     )
     
-    transactions.to_sql(
-        name="transactions",
-        con=connection,
-        schema="staging",
-        if_exists="append",
-        index=False,
-        chunksize=100_000
+    fraud_labels = pd.read_parquet(
+        processed_path / "fraud_labels.parquet"
+    )
+    
+    print(f"Loaded users.parquet: {len(users):,} rows")
+    print(f"Loaded cards.parquet: {len(cards):,} rows")
+    print(f"Loaded transactions.parquet: {len(transactions):,} rows")
+    print(f"Loaded mcc_codes.parquet: {len(mcc_codes):,} rows")
+    print(f"Loaded fraud_labels.parquet: {len(fraud_labels):,} rows")
+    
+    
+    # --- Full Staging Reload ---
+    
+    reload_start = time.perf_counter()
+    
+    with engine.begin() as connection:
+        connection.execute(
+            text("""
+                truncate table
+                    staging.users,
+                    staging.cards,
+                    staging.transactions,
+                    staging.mcc_codes,
+                    staging.fraud_labels;
+            """)
+        )
+    
+    
+        # --- Load Data into PostgreSQL ---
+        
+        users.to_sql(
+            name="users",
+            con=connection,
+            schema="staging",
+            if_exists="append",
+            index=False
+        )
+        
+        cards.to_sql(
+            name="cards",
+            con=connection,
+            schema="staging",
+            if_exists="append",
+            index=False
+        )
+        
+        mcc_codes.to_sql(
+            name="mcc_codes",
+            con=connection,
+            schema="staging",
+            if_exists="append",
+            index=False
+        )
+        
+        fraud_labels.to_sql(
+            name="fraud_labels",
+            con=connection,
+            schema="staging",
+            if_exists="append",
+            index=False
+        )
+        
+        transactions.to_sql(
+            name="transactions",
+            con=connection,
+            schema="staging",
+            if_exists="append",
+            index=False,
+            chunksize=100_000
+        )
+    
+    reload_end = time.perf_counter()
+    reload_duration = reload_end - reload_start
+    
+    
+    # --- Validate Load ---
+    
+    with engine.connect() as connection:
+        users_rows = connection.execute(
+            text("select count(*) from staging.users;")
+        ).scalar()
+    
+        cards_rows = connection.execute(
+            text("select count(*) from staging.cards;")
+        ).scalar()
+    
+        transactions_rows = connection.execute(
+            text("select count(*) from staging.transactions;")
+        ).scalar()
+    
+        mcc_codes_rows = connection.execute(
+            text("select count(*) fromstaging.mcc_codes;")
+        ).scalar()
+    
+        fraud_labels_rows = connection.execute(
+            text("select count(*) from staging.fraud_labels;")
+        ).scalar()
+    
+    
+    print("\n--- Load Validation ---")
+    
+    print(
+        f"staging.users: "
+        f"{users_rows:,} / {len(users):,}"
+    )
+    
+    print(
+        f"staging.cards: "
+        f"{cards_rows:,} / {len(cards):,}"
+    )
+    
+    print(
+        f"staging.transactions: "
+        f"{transactions_rows:,} / {len(transactions):,}"
+    )
+    
+    print(
+        f"staging.mcc_codes: "
+        f"{mcc_codes_rows:,} / {len(mcc_codes):,}"
+    )
+    
+    print(
+        f"staging.fraud_labels: "
+        f"{fraud_labels_rows:,} / {len(fraud_labels):,}"
+    )
+    
+    
+    # --- Reload Performance ---
+    
+    print(
+        f"\nFull staging reload completed in "
+        f"{reload_duration:.2f} seconds."
     )
 
-reload_end = time.perf_counter()
-reload_duration = reload_end - reload_start
-
-
-# --- Validate Load ---
-
-with engine.connect() as connection:
-    users_rows = connection.execute(
-        text("SELECT COUNT(*) FROM staging.users;")
-    ).scalar()
-
-    cards_rows = connection.execute(
-        text("SELECT COUNT(*) FROM staging.cards;")
-    ).scalar()
-
-    transactions_rows = connection.execute(
-        text("SELECT COUNT(*) FROM staging.transactions;")
-    ).scalar()
-
-    mcc_codes_rows = connection.execute(
-        text("SELECT COUNT(*) FROM staging.mcc_codes;")
-    ).scalar()
-
-    fraud_labels_rows = connection.execute(
-        text("SELECT COUNT(*) FROM staging.fraud_labels;")
-    ).scalar()
-
-
-print("\n--- Load Validation ---")
-
-print(
-    f"staging.users: "
-    f"{users_rows:,} / {len(users):,}"
-)
-
-print(
-    f"staging.cards: "
-    f"{cards_rows:,} / {len(cards):,}"
-)
-
-print(
-    f"staging.transactions: "
-    f"{transactions_rows:,} / {len(transactions):,}"
-)
-
-print(
-    f"staging.mcc_codes: "
-    f"{mcc_codes_rows:,} / {len(mcc_codes):,}"
-)
-
-print(
-    f"staging.fraud_labels: "
-    f"{fraud_labels_rows:,} / {len(fraud_labels):,}"
-)
-
-
-# --- Reload Performance ---
-
-print(
-    f"\nFull staging reload completed in "
-    f"{reload_duration:.2f} seconds."
-)
+if __name__ == "__main__":
+    main()
