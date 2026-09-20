@@ -23,6 +23,7 @@ data/processed/*
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 
 # R
 .Rhistory
