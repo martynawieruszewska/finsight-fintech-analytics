@@ -64,48 +64,48 @@ with engine.begin() as connection:
     )
 
 
-# --- Load Data into PostgreSQL ---
-
-users.to_sql(
-    name="users",
-    con=engine,
-    schema="staging",
-    if_exists="append",
-    index=False
-)
-
-cards.to_sql(
-    name="cards",
-    con=engine,
-    schema="staging",
-    if_exists="append",
-    index=False
-)
-
-mcc_codes.to_sql(
-    name="mcc_codes",
-    con=engine,
-    schema="staging",
-    if_exists="append",
-    index=False
-)
-
-fraud_labels.to_sql(
-    name="fraud_labels",
-    con=engine,
-    schema="staging",
-    if_exists="append",
-    index=False
-)
-
-transactions.to_sql(
-    name="transactions",
-    con=engine,
-    schema="staging",
-    if_exists="append",
-    index=False,
-    chunksize=100_000
-)
+    # --- Load Data into PostgreSQL ---
+    
+    users.to_sql(
+        name="users",
+        con=connection,
+        schema="staging",
+        if_exists="append",
+        index=False
+    )
+    
+    cards.to_sql(
+        name="cards",
+        con=connection,
+        schema="staging",
+        if_exists="append",
+        index=False
+    )
+    
+    mcc_codes.to_sql(
+        name="mcc_codes",
+        con=connection,
+        schema="staging",
+        if_exists="append",
+        index=False
+    )
+    
+    fraud_labels.to_sql(
+        name="fraud_labels",
+        con=connection,
+        schema="staging",
+        if_exists="append",
+        index=False
+    )
+    
+    transactions.to_sql(
+        name="transactions",
+        con=connection,
+        schema="staging",
+        if_exists="append",
+        index=False,
+        chunksize=100_000
+    )
 
 reload_end = time.perf_counter()
 reload_duration = reload_end - reload_start
