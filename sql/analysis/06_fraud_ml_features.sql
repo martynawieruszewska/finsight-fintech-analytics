@@ -37,15 +37,8 @@ select
 	count(*) as total_transactions,
 	count(is_fraud) as labeled_transactions,
 	count(*) filter (where is_fraud = true) as fraud_transactions,
-	round(
-		count(is_fraud)::numeric / count(*) * 100,
-		2
-	) as label_coverage_pct,
-	round(
-		count(*) filter (where is_fraud = true)::numeric
-		/ count(is_fraud) * 100,
-		4
-	) as fraud_rate_pct
+	round(count(is_fraud)::numeric / count(*) * 100, 2) as label_coverage_pct,
+	round(count(*) filter (where is_fraud = true)::numeric / count(is_fraud) * 100, 4) as fraud_rate_pct
 from analytics.fact_transactions;
 
 
@@ -74,13 +67,17 @@ with transaction_features as (
 ),
 
 historical_features as (
-select 
-	*,
-	count(*) over (partition by user_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding) as user_previous_transaction_count,
-	round(avg(amount) over (partition by user_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding), 2) as user_previous_avg_amount,
-	count(*) over (partition by card_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding) as card_previous_transaction_count,
-	round(avg(amount) over (partition by card_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding), 2) as card_previous_avg_amount
-from transaction_features
+	select 
+		*,
+		count(*) over (partition by user_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding) as user_previous_transaction_count,
+		round(avg(amount) over (partition by user_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding), 2) as user_previous_avg_amount,
+		count(*) over (partition by user_key order by transaction_timestamp range between interval '24 hours' preceding and interval '1 microsecond' preceding) as user_transactions_last_24h,
+		round(sum(amount) over (partition by user_key order by transaction_timestamp range between interval '24 hours' preceding and interval '1 microsecond' preceding), 2) as user_amount_last_24h,
+		count(*) over (partition by card_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding) as card_previous_transaction_count,
+		round(avg(amount) over (partition by card_key order by transaction_timestamp, transaction_key rows between unbounded preceding and 1 preceding), 2) as card_previous_avg_amount,
+		lag(transaction_timestamp) over (partition by user_key order by transaction_timestamp, transaction_key) as user_previous_transaction_timestamp,
+		lag(transaction_timestamp) over (partition by card_key order by transaction_timestamp, transaction_key) as card_previous_transaction_timestamp
+	from transaction_features
 ), 
 
 ml_features as (
@@ -102,11 +99,15 @@ select
 	user_previous_transaction_count,
 	user_previous_avg_amount,
 	round(amount - user_previous_avg_amount, 2) as amount_vs_user_avg,
+	user_transactions_last_24h,
+    user_amount_last_24h,
+    round(extract(epoch from (transaction_timestamp - user_previous_transaction_timestamp)) / 3600, 2) as hours_since_user_transaction,
 	
 	-- card historical features
 	card_previous_transaction_count,
 	card_previous_avg_amount,
 	round(amount - card_previous_avg_amount, 2) as amount_vs_card_avg,
+	round(extract(epoch from (transaction_timestamp - card_previous_transaction_timestamp)) / 3600, 2) as hours_since_card_transaction,
 	
 	-- target
 	is_fraud
