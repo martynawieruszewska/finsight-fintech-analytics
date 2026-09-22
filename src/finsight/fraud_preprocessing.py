@@ -42,7 +42,7 @@ def encode_categorical_features(X_train, X_val):
 # Fill missing values using training medians
 def handle_missing_values(final_train, final_val):
     medians = final_train.median()
-    final_train = final_train.fillna(median)
-    final_val = final_val.fillna(median)
+    final_train = final_train.fillna(medians)
+    final_val = final_val.fillna(medians)
 
     return final_train, final_val
