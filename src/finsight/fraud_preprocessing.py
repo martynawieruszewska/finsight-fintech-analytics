@@ -39,6 +39,19 @@ def encode_categorical_features(X_train, X_val):
     return final_train, final_val
 
 
+# Handle behavioral missing values
+def handle_behavioral_missing_values(final_train, final_val):
+    final_train["user_amount_last_24h"] = final_train["user_amount_last_24h"].fillna(0)
+    final_train["has_user_transaction_history"] = final_train["hours_since_user_transaction"].notna().astype(int)
+    final_train["has_card_transaction_history"] = final_train["hours_since_card_transaction"].notna().astype(int)
+
+    final_val["user_amount_last_24h"] = final_val["user_amount_last_24h"].fillna(0)
+    final_val["has_user_transaction_history"] = final_val["hours_since_user_transaction"].notna().astype(int)
+    final_val["has_card_transaction_history"] = final_val["hours_since_card_transaction"].notna().astype(int)
+    
+    return final_train, final_val
+
+
 # Fill missing values using training medians
 def handle_missing_values(final_train, final_val):
     medians = final_train.median()
