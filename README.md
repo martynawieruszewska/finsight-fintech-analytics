@@ -1,8 +1,8 @@
-# FinSight — Fintech Analytics
+# FinSight - Fintech Analytics
 
 FinSight is an end-to-end fintech data analytics and machine learning project built around a large financial transaction dataset.
 
-The project combines Python, PostgreSQL, SQL analytics, customer segmentation, retention analysis, feature engineering, and fraud detection modeling. Its goal is to build a reproducible workflow that transforms raw transactional data into validated datasets, database-backed analytics, business insights, and machine learning models.
+The project combines Python, PostgreSQL, SQL analytics, customer segmentation, retention analysis, feature engineering, and fraud detection modeling. Its goal is to build a reproducible workflow that transforms raw transactional data into validated datasets, database-backed analytics, business insights, and machine learning experiments.
 
 ## Tech Stack
 
@@ -87,22 +87,69 @@ Detailed interpretations are available in [`docs/business_insights.md`](docs/bus
 
 The fraud detection module uses historical transaction features created in PostgreSQL and a time-based train-validation split to reduce the risk of temporal data leakage.
 
+Historical features are calculated using only information available before each transaction. Transactions without known fraud labels can contribute to historical behavior, but are excluded from supervised model training and evaluation.
+
 The current workflow includes:
 
-- fraud distribution analysis over time,
+- fraud target and label coverage analysis,
 - historical customer- and card-level feature engineering,
+- recent transaction activity and transaction timing features,
 - time-based training and validation datasets,
+- deterministic training-set undersampling,
 - categorical feature encoding,
-- missing-value handling,
-- feature scaling,
+- semantic missing-value handling,
+- feature scaling where required,
 - Logistic Regression baseline modeling,
-- evaluation using recall, precision and F1-score,
-- predicted probability analysis,
-- classification threshold analysis.
+- Random Forest experiments,
+- decision-threshold analysis,
+- model comparison using recall, precision and F1-score,
+- feature importance analysis.
 
-Initial experiments demonstrate why accuracy alone is misleading for highly imbalanced fraud detection data. Lowering the classification threshold substantially improves recall, but produces very low precision, indicating that threshold adjustment alone is not sufficient.
+### Logistic Regression
 
-The next stage focuses on comparing the Logistic Regression baseline with alternative classification models using the same validation data and evaluation metrics.
+Logistic Regression was used as the initial classification baseline.
+
+Because fraud represents only a very small fraction of labeled transactions, accuracy was found to be misleading as the primary evaluation metric. Decision-threshold experiments showed that lowering the classification threshold can increase recall, but at the cost of extremely low precision.
+
+This demonstrated that threshold adjustment alone was insufficient to produce a useful fraud detection model.
+
+### Random Forest
+
+Random Forest was evaluated as a nonlinear alternative to Logistic Regression.
+
+Experiments included:
+
+- baseline Random Forest,
+- limiting tree depth,
+- class weighting,
+- feature importance analysis,
+- categorical representation of Merchant Category Code (`mcc_key`),
+- removal of the high-cardinality `merchant_id` feature.
+
+Treating `mcc_key` as a categorical feature instead of an ordered numerical identifier improved recall, precision and F1-score without changing the underlying model.
+
+Removing `merchant_id` reduced performance, indicating that the feature contains useful predictive information despite its high cardinality.
+
+The Random Forest using categorical MCC representation remains the strongest model evaluated so far.
+
+### Behavioral Feature Engineering
+
+Additional behavioral features were engineered in PostgreSQL to investigate whether recent transaction activity improves fraud detection.
+
+The extended feature set includes:
+
+- number of user transactions during the previous 24 hours,
+- total user transaction amount during the previous 24 hours,
+- time since the user's previous transaction,
+- time since the card's previous transaction.
+
+Missing values were handled according to their semantic meaning rather than using a single imputation strategy for all features. Additional binary indicators preserve information about whether previous user or card transaction history exists.
+
+Several behavioral features received relatively high Random Forest feature importance. In particular, recent transaction amount and time since the previous card transaction were among the model's most important features.
+
+However, the extended feature set reduced recall, precision and F1-score on the unchanged time-based validation set.
+
+This demonstrates that high feature importance does not necessarily imply improved model generalization. Further expansion with similar behavioral features is therefore not pursued.
 
 ## Repository Structure
 
@@ -123,7 +170,8 @@ finsight-fintech-analytics/
 │   └── ml/
 │       ├── 01_fraud_data_preparation.ipynb
 │       ├── 02_logistic_regression.ipynb
-│       └── 03_model_comparison.ipynb
+│       ├── 03_random_forest.ipynb
+│       └── 04_behavioral_feature_engineering.ipynb
 │
 ├── sql/
 │   ├── analysis/
@@ -131,14 +179,14 @@ finsight-fintech-analytics/
 │   │   ├── 02_merchant_analysis.sql
 │   │   ├── 03_customer_360.sql
 │   │   ├── 04_rfm_segmentation.sql
-│   │   ├── 05_retention_analysis.sql
-│   │   └── 06_fraud_ml_features.sql
+│   │   └── 05_retention_analysis.sql
 │   │
 │   ├── scripts/
 │   │   ├── 01_create_database.sql
 │   │   ├── 02_schema.sql
 │   │   ├── 03_load_analytics.sql
-│   │   └── 04_indexes.sql
+│   │   ├── 04_indexes.sql
+│   │   └── 06_fraud_ml_features.sql
 │   │
 │   └── tests/
 │       ├── 01_schema_tests.sql
@@ -150,6 +198,7 @@ finsight-fintech-analytics/
 │       ├── __init__.py
 │       ├── database.py
 │       ├── fraud_data.py
+│       ├── fraud_preprocessing.py
 │       ├── load_to_postgres.py
 │       └── validation.py
 │
@@ -173,7 +222,24 @@ The SQL layer covers:
 - schema and analytics validation,
 - index performance testing.
 
-Fraud labels are treated carefully because they are available only for a subset of transactions. Missing fraud labels are therefore not automatically interpreted as legitimate transactions.
+Fraud labels are available only for a subset of transactions. Missing fraud labels are therefore not interpreted as legitimate transactions.
+
+For machine learning, historical features are calculated before filtering observations by label availability. This allows previous observed transactions to contribute to transaction history without incorrectly assigning fraud labels to unlabeled records.
+
+## Reproducible ML Experiments
+
+The project separates the original ML feature set from later behavioral features.
+
+The original feature set is explicitly defined in Python so that earlier Logistic Regression and Random Forest experiments remain reproducible even when new features are added to the PostgreSQL feature view.
+
+New feature groups are introduced explicitly for individual experiments rather than automatically changing the input data used by previous models.
+
+Training and validation data are separated chronologically:
+
+- transactions before 2018 are used for training,
+- transactions from 2018 are used for validation.
+
+The training set uses deterministic undersampling of non-fraud transactions, while the validation set retains its naturally imbalanced fraud distribution.
 
 ## Setup
 
@@ -212,10 +278,15 @@ Completed:
 - Customer 360
 - RFM segmentation
 - Retention analysis
-- Fraud feature engineering
+- Fraud-oriented historical feature engineering
 - Time-based ML dataset preparation
 - Logistic Regression baseline
 - Probability and classification threshold analysis
+- Random Forest baseline and model experiments
+- MCC categorical representation experiment
+- Merchant ID removal experiment
+- Behavioral feature engineering
+- Behavioral feature importance analysis
 
 In progress:
 
@@ -223,6 +294,7 @@ In progress:
 
 Planned:
 
-- Final fraud model evaluation and interpretation
+- Additional classification model evaluation
+- Final fraud model comparison and interpretation
 - Analytical dashboard
 - PostgreSQL bulk-loading optimization
