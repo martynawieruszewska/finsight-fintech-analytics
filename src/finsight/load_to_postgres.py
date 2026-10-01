@@ -128,7 +128,7 @@ def main():
         ).scalar()
     
         mcc_codes_rows = connection.execute(
-            text("select count(*) fromstaging.mcc_codes;")
+            text("select count(*) from staging.mcc_codes;")
         ).scalar()
     
         fraud_labels_rows = connection.execute(
