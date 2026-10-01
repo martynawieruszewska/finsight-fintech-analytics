@@ -42,7 +42,7 @@ def cell_finished(result):
 def enable_cell_notifications():
     global notifications_enabled
 
-    if notifications_enabled:
+    if notifications_enabled or platform.system() != "Darwin":
         return
 
     ipython = get_ipython()
