@@ -23,5 +23,12 @@ def evaluate_model(model, X, y, experiment):
                   
     return evaluation
 
+# Combine evaluation results into a comparison table
+def results_to_frame(results):
+    return (
+        pd.DataFrame(results)
+        .drop(columns="confusion_matrix")
+        .set_index("experiment")
+    )
     
     
