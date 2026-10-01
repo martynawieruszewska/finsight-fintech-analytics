@@ -52,6 +52,7 @@ def download_train_data(engine, non_fraud_limit=300000, features=BASE_FEATURES):
             order by md5(transaction_key::text), transaction_key
             limit :non_fraud_limit
         )
+        order by transaction_key
     """)
 
     train_df = pd.read_sql(
@@ -72,6 +73,7 @@ def download_validation_data(engine, features=BASE_FEATURES):
         from analytics.fraud_ml_features
         where transaction_timestamp >= '2018-01-01'
           and transaction_timestamp < '2019-01-01'
+        order by transaction_key
     """
 
     val_df = pd.read_sql(val_query, engine)
@@ -133,6 +135,7 @@ def download_year_data(engine, year, non_fraud_limit, features=BASE_FEATURES):
             order by md5(transaction_key::text), transaction_key
             limit :non_fraud_limit
         )
+        order by transaction_key
     """)
 
     year_df = pd.read_sql(
