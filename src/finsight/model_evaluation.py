@@ -1,3 +1,4 @@
+import pandas as pd
 from sklearn.metrics import (
     recall_score,
     precision_score,
