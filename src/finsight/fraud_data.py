@@ -82,6 +82,25 @@ def download_validation_data(engine, features=BASE_FEATURES):
 
     return X_val, y_val
 
+# Load all labeled transactions for a specific year (natural fraud rate)
+def download_full_year_data(engine, year, features=BASE_FEATURES):
+    year_query = text("""
+        select *
+        from analytics.fraud_ml_features
+        where extract(year from transaction_timestamp) = :year
+        order by transaction_key
+    """)
+
+    year_df = pd.read_sql(
+        year_query,
+        engine,
+        params={"year": year}
+    )
+
+    X_year, y_year = split_features_target(year_df, features)
+
+    return X_year, y_year
+
 
 # Get non-fraud counts by year
 def get_non_fraud_counts(engine, start_year, end_year):
