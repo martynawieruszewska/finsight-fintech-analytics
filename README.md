@@ -1,300 +1,172 @@
-# FinSight - Fintech Analytics
+# FinSight - Fintech Analytics & Fraud Detection
 
-FinSight is an end-to-end fintech data analytics and machine learning project built around a large financial transaction dataset.
+End-to-end analytics and machine learning project on **13.3 million card transactions**: from raw data validation, through a PostgreSQL dimensional model and SQL analytics, to fraud detection models evaluated with time-aware validation.
 
-The project combines Python, PostgreSQL, SQL analytics, customer segmentation, retention analysis, feature engineering, and fraud detection modeling. Its goal is to build a reproducible workflow that transforms raw transactional data into validated datasets, database-backed analytics, business insights, and machine learning experiments.
+**Highlights**
+
+- Data pipeline: Python validation → Parquet → PostgreSQL staging → star-schema analytics layer (~22.2M records).
+- SQL analytics: KPIs, merchant analysis, Customer 360, RFM segmentation and cohort retention.
+- Fraud detection on a highly imbalanced target (**0.15% fraud**) with leakage-safe historical features and a strict time-based split.
+- Best model on the 2018 validation set: **Gradient Boosting**, catching **23% of fraud** while flagging only **0.43% of transactions** - over **50× the precision of random flagging**.
+- Temporal cross-validation exposed **concept drift** (the 2015 shift to chip transactions and a change in fraud patterns in 2017) and showed that evaluating folds on undersampled data overstated F1-scores by up to an order of magnitude.
 
 ## Tech Stack
 
-- Python
-- PostgreSQL
-- SQL
-- Pandas
-- NumPy
-- SQLAlchemy
-- scikit-learn
-- JupyterLab
-- Matplotlib
-- PyArrow
+Python (Pandas, NumPy, scikit-learn, SQLAlchemy, Matplotlib, PyArrow) · PostgreSQL · SQL · JupyterLab
 
 ## Dataset
 
-This project uses the **Financial Transactions Dataset: Analytics**, originally created by CaixaBank Tech for the 2024 AI Hackathon and distributed via Kaggle.
+[Financial Transactions Dataset: Analytics](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets/data) (CaixaBank Tech, 2024 AI Hackathon, via Kaggle). The data is synthetic and covers 2010–2019.
 
-The dataset contains five source files:
+| File | Content | Rows |
+|---|---|---|
+| `transactions_data.csv` | card transactions | 13,305,915 |
+| `users_data.csv` | customers | 2,000 |
+| `cards_data.csv` | payment cards | 6,146 |
+| `mcc_codes.json` | merchant category codes | 109 |
+| `train_fraud_labels.json` | fraud labels (67% of transactions) | 8,914,963 |
 
-- `transactions_data.csv` — transaction-level data
-- `users_data.csv` — customer information
-- `cards_data.csv` — payment card information
-- `mcc_codes.json` — Merchant Category Code descriptions
-- `train_fraud_labels.json` — fraud labels for transactions
-
-The raw dataset is not included in this repository due to its size. It can be downloaded from the [Kaggle dataset page](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets/data).
+Raw and processed data are not included in the repository due to their size.
 
 ## Project Workflow
 
 ```text
-Raw transactional data
-        ↓
-Data validation & preprocessing
-        ↓
-Parquet datasets
-        ↓
-PostgreSQL staging layer
-        ↓
-Analytics layer
-        ↓
-SQL analytics & feature engineering
-        ↓
-Business insights
-        ↓
-Fraud detection modeling
+Raw CSV / JSON
+   ↓  validation, type conversion, removal of card numbers and CVV   (notebooks 01–02)
+Parquet
+   ↓  load into PostgreSQL staging                                   (load_to_postgres.py)
+Star schema: fact_transactions + dim_users, dim_cards, dim_mcc, dim_date
+   ↓
+SQL analytics & feature views  ──→  business insights               (sql/analysis, docs/)
+   ↓
+Fraud detection models                                               (notebooks/ml)
 ```
 
-## Data Pipeline
+## Key Results
 
-The project processes approximately **22.2 million records** across transaction, customer, card, merchant category, and fraud-label datasets.
+### Business analytics
 
-Data is validated and transformed in Python before being loaded into PostgreSQL. A baseline staging load using Pandas `to_sql()` with SQLAlchemy processed the full dataset in approximately **10 minutes**.
+- Monthly active users grew by ~11% and transactions per active user by ~4.4% over the period.
+- The apparent February drop in transaction value disappears after normalizing by the number of days in the month.
+- Fraudulent transactions are substantially larger across the whole distribution (median 74.00 vs 31.89).
+- Fraud rate and fraud volume rank merchant categories differently (highest rate: Passenger Railways 1.45%; highest volume: Department Stores, 2,251 cases).
+- RFM and retention results are driven by the structure of the observation period (most customers are already active at the start), which is documented as a limitation rather than interpreted as exceptional loyalty.
 
-Reusable Python functionality is organized as an installable `finsight` package under `src/`.
+Details: [`docs/business_insights.md`](docs/business_insights.md)
 
-Raw and processed datasets are intentionally excluded from the repository.
+### Fraud detection — 2018 validation set
 
-## Analytics
+Models are trained on transactions before 2018 (all fraud cases plus a deterministic sample of 300,000 legitimate transactions) and evaluated on all 934,599 labeled transactions from 2018 (1,629 fraud cases, 0.17%).
 
-The SQL analytics layer includes:
+| Model | Recall | Precision | F1 |
+|---|---|---|---|
+| Logistic Regression (scaled) | 0.009 | 0.010 | 0.010 |
+| Random Forest | 0.042 | 0.072 | 0.053 |
+| Random Forest + categorical MCC | 0.056 | 0.111 | 0.074 |
+| Random Forest + categorical MCC + behavioral features | 0.041 | 0.093 | 0.056 |
+| Gradient Boosting (`max_depth=3`, default) | 0.035 | 0.040 | 0.037 |
+| Gradient Boosting (`max_depth=6`) | 0.099 | 0.096 | 0.098 |
+| **Gradient Boosting (`max_depth=15`)** | **0.230** | **0.094** | **0.133** |
 
-- KPI and transaction trend analysis
-- Merchant category analysis
-- Customer 360
-- RFM customer segmentation
-- Cohort and retention analysis
-- Fraud-oriented feature engineering
+A random classifier would reach a precision equal to the fraud rate (0.17%). The best model flags 3,991 transactions (0.43% of all), of which 375 are fraudulent.
 
-Selected findings include:
+Selected findings:
 
-- Monthly active users increased by approximately **11.1%** across the analyzed period.
-- Transaction frequency per active user increased by approximately **4.4%**.
-- An apparent recurring February decline in transaction value largely disappeared after normalizing values by the number of days in each month.
-- Fraud represents approximately **0.15% of labeled transactions**, while fraudulent transactions have substantially higher transaction values across the distribution.
-- Merchant categories differ significantly in both fraud rate and absolute fraud volume.
-- RFM and retention results reveal important limitations caused by the structure of the observation period, demonstrating the need to distinguish observed activity from true customer acquisition and retention.
+- Accuracy is uninformative (above 99.4% for every model, including ones that detect almost no fraud), so models are compared on recall, precision and F1.
+- Lowering the Logistic Regression threshold raises recall to 31% only at precision below 0.3% — threshold tuning alone cannot compensate for a weak model.
+- Encoding MCC as a categorical feature improved all metrics; removing `merchant_id` kept recall unchanged but increased false positives.
+- Behavioral features (24h activity, time since previous transaction) received high feature importance yet **reduced** validation performance — importance does not imply better generalization.
 
-Detailed interpretations are available in [`docs/business_insights.md`](docs/business_insights.md).
+### Temporal validation and drift
 
-## Fraud Detection
+Expanding-window cross-validation over 2013–2017 (train on all previous years, validate on the next one) revealed:
 
-The fraud detection module uses historical transaction features created in PostgreSQL and a time-based train-validation split to reduce the risk of temporal data leakage.
+- **Evaluation must use the natural fraud rate.** Validation folds built from the undersampled data showed F1 of up to 0.85. On complete yearly data, F1 ranged from 0.005 to 0.625.
+- **2015 — new transaction channel.** Chip transactions were absent until 2014 and made up 71% of legitimate transactions in 2015. The model flagged 5.66% of all transactions (actual fraud rate 0.24%), producing 51,090 false positives, 98% of them chip transactions.
+- **2017 — new fraud patterns.** Fraud amounts resembled legitimate transactions and new merchant categories appeared (e.g. an MCC with no historical chip fraud and 0% recall). Only 5 of 172 frauds were detected.
+- **Time-aware validation changed model selection.** `max_depth=6` achieved the best mean F1 (0.316) and beat `max_depth=10` in 4 of 5 years, while manual experiments on 2018 favored deeper trees.
 
-Historical features are calculated using only information available before each transaction. Transactions without known fraud labels can contribute to historical behavior, but are excluded from supervised model training and evaluation.
+## Methodology Notes
 
-The current workflow includes:
-
-- fraud target and label coverage analysis,
-- historical customer- and card-level feature engineering,
-- recent transaction activity and transaction timing features,
-- time-based training and validation datasets,
-- deterministic training-set undersampling,
-- categorical feature encoding,
-- semantic missing-value handling,
-- feature scaling where required,
-- Logistic Regression baseline modeling,
-- Random Forest experiments,
-- decision-threshold analysis,
-- model comparison using recall, precision and F1-score,
-- feature importance analysis.
-
-### Logistic Regression
-
-Logistic Regression was used as the initial classification baseline.
-
-Because fraud represents only a very small fraction of labeled transactions, accuracy was found to be misleading as the primary evaluation metric. Decision-threshold experiments showed that lowering the classification threshold can increase recall, but at the cost of extremely low precision.
-
-This demonstrated that threshold adjustment alone was insufficient to produce a useful fraud detection model.
-
-### Random Forest
-
-Random Forest was evaluated as a nonlinear alternative to Logistic Regression.
-
-Experiments included:
-
-- baseline Random Forest,
-- limiting tree depth,
-- class weighting,
-- feature importance analysis,
-- categorical representation of Merchant Category Code (`mcc_key`),
-- removal of the high-cardinality `merchant_id` feature.
-
-Treating `mcc_key` as a categorical feature instead of an ordered numerical identifier improved recall, precision and F1-score without changing the underlying model.
-
-Removing `merchant_id` reduced performance, indicating that the feature contains useful predictive information despite its high cardinality.
-
-The Random Forest using categorical MCC representation remains the strongest model evaluated so far.
-
-### Behavioral Feature Engineering
-
-Additional behavioral features were engineered in PostgreSQL to investigate whether recent transaction activity improves fraud detection.
-
-The extended feature set includes:
-
-- number of user transactions during the previous 24 hours,
-- total user transaction amount during the previous 24 hours,
-- time since the user's previous transaction,
-- time since the card's previous transaction.
-
-Missing values were handled according to their semantic meaning rather than using a single imputation strategy for all features. Additional binary indicators preserve information about whether previous user or card transaction history exists.
-
-Several behavioral features received relatively high Random Forest feature importance. In particular, recent transaction amount and time since the previous card transaction were among the model's most important features.
-
-However, the extended feature set reduced recall, precision and F1-score on the unchanged time-based validation set.
-
-This demonstrates that high feature importance does not necessarily imply improved model generalization. Further expansion with similar behavioral features is therefore not pursued.
+- **No temporal leakage.** Historical customer and card features use only transactions before the current one (window frames ending at `1 preceding`); same-minute transactions are excluded from 24-hour aggregates.
+- **Unlabeled transactions** (33%) are used to build transaction history but excluded from training and evaluation; missing labels are never treated as legitimate.
+- **Preprocessing fitted on training data only** (one-hot encoder, median imputation).
+- **Reproducibility.** Data loaders use deterministic sampling and ordering, the original feature set is defined explicitly in code, and all notebooks run top-to-bottom.
+- **Sample size caveat.** With 1,629 fraud cases in 2018, a difference of 0.01 in recall corresponds to about 16 transactions.
 
 ## Repository Structure
 
 ```text
 finsight-fintech-analytics/
-├── data/
-│   ├── raw/
-│   └── processed/
-│
+├── data/                      # raw/ and processed/ (not tracked)
 ├── docs/
-│   ├── business_insights.md
-│   └── load_performance.md
-│
+│   ├── business_insights.md   # interpretation of SQL analytics
+│   └── load_performance.md    # PostgreSQL load benchmark
 ├── notebooks/
 │   ├── 01_data_overview.ipynb
-│   ├── 02_data_quality.ipynb
-│   ├── 05_retention_heatmap.ipynb
+│   ├── 02_data_quality.ipynb          # validation, cleaning, Parquet export
+│   ├── 03_retention_heatmap.ipynb
 │   └── ml/
 │       ├── 01_fraud_data_preparation.ipynb
 │       ├── 02_logistic_regression.ipynb
 │       ├── 03_random_forest.ipynb
-│       └── 04_behavioral_feature_engineering.ipynb
-│
+│       ├── 04_behavioral_feature_engineering.ipynb
+│       ├── 05_gradient_boosting.ipynb
+│       └── 06_temporal_validation.ipynb
 ├── sql/
-│   ├── analysis/
-│   │   ├── 01_kpi_analysis.sql
-│   │   ├── 02_merchant_analysis.sql
-│   │   ├── 03_customer_360.sql
-│   │   ├── 04_rfm_segmentation.sql
-│   │   └── 05_retention_analysis.sql
-│   │
-│   ├── scripts/
-│   │   ├── 01_create_database.sql
-│   │   ├── 02_schema.sql
-│   │   ├── 03_load_analytics.sql
-│   │   ├── 04_indexes.sql
-│   │   └── 06_fraud_ml_features.sql
-│   │
-│   └── tests/
-│       ├── 01_schema_tests.sql
-│       ├── 02_analytics_tests.sql
-│       └── 03_index_performance_tests.sql
-│
-├── src/
-│   └── finsight/
-│       ├── __init__.py
-│       ├── database.py
-│       ├── fraud_data.py
-│       ├── fraud_preprocessing.py
-│       ├── load_to_postgres.py
-│       └── validation.py
-│
+│   ├── scripts/               # database build pipeline (run in order)
+│   ├── analysis/              # analytical queries and views
+│   └── tests/                 # schema, data and index checks
+├── src/finsight/              # reusable package
+│   ├── database.py            # PostgreSQL connection
+│   ├── load_to_postgres.py    # staging load
+│   ├── validation.py          # data quality checks
+│   ├── fraud_data.py          # ML data loading and sampling
+│   ├── fraud_preprocessing.py # encoding and missing values
+│   └── model_evaluation.py    # evaluation helpers
 ├── .env.example
-├── pyproject.toml
-└── README.md
+└── pyproject.toml
 ```
 
-## Database
+## Reproducing the Project
 
-The PostgreSQL database separates raw staging data from analytics-ready structures.
-
-The SQL layer covers:
-
-- database and schema creation,
-- analytical table loading,
-- indexing,
-- KPI and customer analytics,
-- retention analysis,
-- fraud feature engineering,
-- schema and analytics validation,
-- index performance testing.
-
-Fraud labels are available only for a subset of transactions. Missing fraud labels are therefore not interpreted as legitimate transactions.
-
-For machine learning, historical features are calculated before filtering observations by label availability. This allows previous observed transactions to contribute to transaction history without incorrectly assigning fraud labels to unlabeled records.
-
-## Reproducible ML Experiments
-
-The project separates the original ML feature set from later behavioral features.
-
-The original feature set is explicitly defined in Python so that earlier Logistic Regression and Random Forest experiments remain reproducible even when new features are added to the PostgreSQL feature view.
-
-New feature groups are introduced explicitly for individual experiments rather than automatically changing the input data used by previous models.
-
-Training and validation data are separated chronologically:
-
-- transactions before 2018 are used for training,
-- transactions from 2018 are used for validation.
-
-The training set uses deterministic undersampling of non-fraud transactions, while the validation set retains its naturally imbalanced fraud distribution.
-
-## Setup
-
-Create and activate a virtual environment:
+**1. Environment**
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-```
-
-Install the project and development dependencies:
-
-```bash
 python3 -m pip install -e ".[dev]"
+cp .env.example .env   # fill in PostgreSQL credentials
 ```
 
-Create a local `.env` file based on:
+**2. Data** — download the Kaggle dataset into `data/raw/`.
+
+**3. Validation and Parquet export** — run `notebooks/01_data_overview.ipynb` and `notebooks/02_data_quality.ipynb`.
+
+**4. Database**
 
 ```text
-.env.example
+sql/scripts/01_create_database.sql      (connected to the default postgres database)
+sql/scripts/02_schema.sql
+python -m finsight.load_to_postgres     (staging load, ~10 min)
+sql/scripts/03_load_analytics.sql
+sql/scripts/04_indexes.sql
+sql/scripts/05_fraud_ml_features.sql
 ```
 
-Database credentials are stored locally and are not committed to the repository.
+**5. Analytics views** - `sql/analysis/03_customer_360.sql`, `04_rfm_segmentation.sql` and `05_retention_analysis.sql` create the views used by the analysis and the retention notebook. Data checks are available in `sql/tests/`.
 
-## Project Status
+**6. Notebooks** — `notebooks/03_retention_heatmap.ipynb`, then `notebooks/ml/01` to `06` in order.
 
-**In development**
+## Limitations
 
-Completed:
+- The dataset is synthetic; fraud labels contain long gaps (39 months with no labeled fraud), so yearly fraud rates vary strongly.
+- Most customers are already active at the start of the data, so the first observed transaction is not a true acquisition date - retention and RFM results are descriptive only.
+- Absolute fraud detection performance remains modest, and the 2018 validation set was used for several manual model comparisons.
 
-- Data exploration and quality analysis
-- Python validation and preprocessing
-- PostgreSQL data pipeline
-- SQL analytics layer
-- KPI and merchant analysis
-- Customer 360
-- RFM segmentation
-- Retention analysis
-- Fraud-oriented historical feature engineering
-- Time-based ML dataset preparation
-- Logistic Regression baseline
-- Probability and classification threshold analysis
-- Random Forest baseline and model experiments
-- MCC categorical representation experiment
-- Merchant ID removal experiment
-- Behavioral feature engineering
-- Behavioral feature importance analysis
+## Next Steps
 
-In progress:
-
-- Fraud model comparison
-
-Planned:
-
-- Additional classification model evaluation
-- Final fraud model comparison and interpretation
-- Analytical dashboard
-- PostgreSQL bulk-loading optimization
+- Systematic hyperparameter tuning on the temporal folds.
+- Final model selection based on temporal cross-validation, followed by a single evaluation on 2018 and the untouched 2019 period.
+- Decision threshold selection for the final model.
+- PostgreSQL bulk loading with `COPY` (current baseline: [`docs/load_performance.md`](docs/load_performance.md)).
