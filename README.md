@@ -158,6 +158,8 @@ sql/scripts/05_fraud_ml_features.sql
 
 **6. Notebooks** — `notebooks/03_retention_heatmap.ipynb`, then `notebooks/ml/01` to `06` in order.
 
+**7. Tests** — run `pytest` to execute unit tests for the `finsight` package.
+
 ## Limitations
 
 - The dataset is synthetic; fraud labels contain long gaps (39 months with no labeled fraud), so yearly fraud rates vary strongly.
