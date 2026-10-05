@@ -8,7 +8,7 @@ End-to-end analytics and machine learning project on **13.3 million card transac
 - SQL analytics: KPIs, merchant analysis, Customer 360, RFM segmentation and cohort retention.
 - Fraud detection on a highly imbalanced target (**0.15% fraud**) with leakage-safe historical features computed in SQL and a strict time-based split.
 - Manual experiments on the 2018 validation set: **Gradient Boosting** (`max_depth=15`) caught **23% of fraud** while flagging only **0.43% of transactions** - over **50× the precision of random flagging**.
-- Expanding-window temporal cross-validation (2013–2017) exposed **concept drift**: the arrival of chip transactions in 2015 and a change in fraud patterns in 2017. Under time-aware validation, shallower trees (`max_depth=6`) generalized better than the deep trees favored on 2018.
+- Expanding-window temporal cross-validation (2013-2017) exposed **concept drift**: the arrival of chip transactions in 2015 and a change in fraud patterns in 2017. Under time-aware validation, shallower trees (`max_depth=6`) generalized better than the deep trees favored on 2018.
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ Python (Pandas, NumPy, scikit-learn, SQLAlchemy, Matplotlib, PyArrow) · Postgre
 
 ## Dataset
 
-[Financial Transactions Dataset: Analytics](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets/data) (CaixaBank Tech, 2024 AI Hackathon, via Kaggle). The data is synthetic and covers 2010–2019.
+[Financial Transactions Dataset: Analytics](https://www.kaggle.com/datasets/computingvictor/transactions-fraud-datasets/data) (CaixaBank Tech, 2024 AI Hackathon, via Kaggle). The data is synthetic and covers 2010-2019.
 
 | File | Content | Rows |
 |---|---|---|
@@ -32,7 +32,7 @@ Raw and processed data are not included in the repository due to their size. Car
 
 ```text
 Raw CSV / JSON
-   ↓  validation, type conversion, removal of card numbers and CVV   (notebooks 01–02)
+   ↓  validation, type conversion, removal of card numbers and CVV   (notebooks 01-02)
 Parquet
    ↓  load into PostgreSQL staging                                   (load_to_postgres.py)
 Star schema: fact_transactions + dim_users, dim_cards, dim_mcc, dim_date
@@ -73,7 +73,7 @@ Models are trained on transactions before 2018 (all fraud cases plus a determini
 
 A random classifier would reach a precision equal to the fraud rate (0.17%). The strongest configuration in these experiments flags 3,991 transactions (0.43% of all), of which 375 are fraudulent.
 
-These were exploratory comparisons. Because 2018 was used repeatedly for model decisions, hyperparameter selection was moved to temporal cross-validation within 2010–2017 (see below).
+These were exploratory comparisons. Because 2018 was used repeatedly for model decisions, hyperparameter selection was moved to temporal cross-validation within 2010-2017 (see below).
 
 Selected findings:
 
@@ -85,7 +85,7 @@ Selected findings:
 
 ### Temporal validation and concept drift
 
-Expanding-window cross-validation within the development period: each fold trains on all previous years and validates on the next one (2010–2012 → 2013, …, 2010–2016 → 2017). Training folds use the undersampled data, while **each validation fold contains all labeled transactions of its year**, so it is evaluated at the natural fraud rate. On the undersampled data the fraud share of a validation year would be heavily inflated (e.g. 5.35% instead of 0.24% in 2015), overstating precision and F1.
+Expanding-window cross-validation within the development period: each fold trains on all previous years and validates on the next one (2010-2012 → 2013, …, 2010-2016 → 2017). Training folds use the undersampled data, while **each validation fold contains all labeled transactions of its year**, so it is evaluated at the natural fraud rate. On the undersampled data the fraud share of a validation year would be heavily inflated (e.g. 5.35% instead of 0.24% in 2015), overstating precision and F1.
 
 Gradient Boosting (`max_depth=6`) per validation year:
 
@@ -106,7 +106,7 @@ Two different failure modes:
 
 ## Methodology Notes
 
-- **Chronological split.** 2010–2017: development and temporal cross-validation; 2018: validation and model comparison; 2019: untouched final out-of-time test.
+- **Chronological split.** 2010-2017: development and temporal cross-validation; 2018: validation and model comparison; 2019: untouched final out-of-time test.
 - **No temporal leakage in features.** Historical customer and card features use only transactions before the current one (window frames ending at `1 preceding`); same-minute transactions are excluded from 24-hour aggregates.
 - **Unlabeled transactions** (33%) are used to build transaction history but excluded from training and evaluation; missing labels are never treated as legitimate.
 - **Preprocessing fitted on training data only** (one-hot encoder, median imputation), separately in every cross-validation fold.
