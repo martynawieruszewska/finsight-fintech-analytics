@@ -27,3 +27,6 @@ __pycache__/
 
 # R
 .Rhistory
+
+# Pytest
+.pytest_cache/
