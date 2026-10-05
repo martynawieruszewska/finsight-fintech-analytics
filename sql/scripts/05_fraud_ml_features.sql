@@ -1,46 +1,20 @@
 /*
 ===============================================================================
-FinSight - Fraud Detection ML Feature Engineering
+FinSight - Fraud Detection ML Feature View
 ===============================================================================
 Purpose:
-    - Prepares transaction-level features for fraud detection modeling.
+    - Creates the analytics.fraud_ml_features materialized view used by all
+      fraud detection notebooks.
     - Defines the ML observation unit as a single transaction.
-    - Uses only information available at or before transaction time.
-    - Excludes transactions without a known fraud label from model training.
+    - Uses only information available before each transaction.
+    - Historical features are calculated on all transactions, while only
+      transactions with a known fraud label are kept in the final view.
+
+Run after:
+    - 03_load_analytics.sql
+    - 04_indexes.sql
 ===============================================================================
 */
-
-select *
-from analytics.fact_transactions
-limit 10;
-
-select
-	column_name,
-	data_type
-from information_schema.columns
-where table_schema = 'analytics'
-	and table_name = 'fact_transactions'
-order by ordinal_position;
-
--- =============================================================================
--- Fraud Target EDA
--- =============================================================================
--- examines target availability and class imbalance before model development
-
-select 
-	is_fraud,
-	count(*) as transaction_count
-from analytics.fact_transactions
-group by is_fraud;
-
-select
-	count(*) as total_transactions,
-	count(is_fraud) as labeled_transactions,
-	count(*) filter (where is_fraud = true) as fraud_transactions,
-	round(count(is_fraud)::numeric / count(*) * 100, 2) as label_coverage_pct,
-	round(count(*) filter (where is_fraud = true)::numeric / count(is_fraud) * 100, 4) as fraud_rate_pct
-from analytics.fact_transactions;
-
 
 drop materialized view if exists analytics.fraud_ml_features;
 
@@ -119,9 +93,3 @@ select
 	*
 from ml_features;
 
-select count(*)
-from analytics.fraud_ml_features;
-
-select *
-from analytics.fraud_ml_features
-limit 10;
