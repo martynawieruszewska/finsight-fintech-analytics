@@ -55,3 +55,18 @@ from analytics.fraud_ml_features;
 select *
 from analytics.fraud_ml_features
 limit 10;
+
+-- =============================================================================
+-- Label Coverage and Fraud Rate Over Time
+-- =============================================================================
+
+select
+	extract(year from transaction_timestamp) as year,
+	count(*) as transaction_count,
+	count(*) filter (where is_fraud is not null) as labeled_transactions,
+	round(count(is_fraud)::numeric / count(*) *  100, 2) as label_coverage_pct,
+	count(*) filter (where is_fraud is true) as fraud_trans,
+	round((count(*) filter (where is_fraud is true))::numeric / count(is_fraud) *  100, 2) as fraud_rate_pct
+from analytics.fact_transactions
+group by extract(year from transaction_timestamp)
+order by extract(year from transaction_timestamp);
